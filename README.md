@@ -42,7 +42,7 @@ ollama serve
 2. Clone the repository:
 
 ```bash
-git clone https://github.com/rahumanaslam/CareerCoachApp.git
+git clone https://github.com/rahumanaslam/CareerCoachLLMApp.git
 cd career-coach-llm
 ```
 
