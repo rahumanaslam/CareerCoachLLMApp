@@ -12,6 +12,7 @@ This **Career Coach LLM App* is designed to provide personalized career guidance
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Usage](#usage)
 
 ## Installation
 
