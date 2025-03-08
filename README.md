@@ -76,7 +76,7 @@ pip install -r requirements.txt
 To run the application, execute the following command:
 
 ```bash
-streamlit run app.py
+streamlit run app.py --server.fileWatcherType none
 ```
 
 This will start the Streamlit application, allowing you to interact with the different modules and features.
