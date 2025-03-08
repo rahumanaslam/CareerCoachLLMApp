@@ -12,6 +12,7 @@ This **Career Coach LLM App* is designed to provide personalized career guidance
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Usage](#usage)
 
 ## Installation
 
@@ -41,7 +42,7 @@ ollama serve
 2. Clone the repository:
 
 ```bash
-git clone https://github.com/rahumanaslam/CareerCoachApp.git
+git clone https://github.com/rahumanaslam/CareerCoachLLMApp.git
 cd career-coach-llm
 ```
 
