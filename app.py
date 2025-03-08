@@ -193,7 +193,7 @@ class StreamlitInterface:
             st.session_state.interview_messages.append(
                 {
                     "role": "assistant",
-                    "content": "Let's begin your mock interview!",
+                    "content": "Let's begin your interview! Tell me about yourself"
                 }
             )
             st.rerun()
