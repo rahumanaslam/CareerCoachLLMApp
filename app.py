@@ -1,6 +1,8 @@
+import os
 import time
 import logging
 import streamlit as st
+from docling.document_converter import DocumentConverter
 from career_coach import CareerCoachApp
 
 
@@ -78,7 +80,21 @@ class StreamlitInterface:
         """
         logging.info("Resume Analysis page")
         st.header("Resume Analysis")
-        resume_text = st.text_area("Paste your resume text here:", height=300)
+        # resume_text = st.text_area("Paste your resume text here:", height=300)
+        resume_file = st.file_uploader(
+            "Upload your resume file here:", type=["pdf", "docx", "doc"]
+        )
+        if resume_file is not None:
+            logging.info("Resume file uploaded")
+            temp_file_path = f"temp_{resume_file.name}"
+            with open(temp_file_path, "wb") as f:
+                f.write(resume_file.getvalue())
+
+            converter = DocumentConverter()
+            result = converter.convert(temp_file_path)
+            logging.info("Resume converted")
+            resume_text = result.document.export_to_text()
+            os.remove(temp_file_path)
         job_description = st.text_area(
             "Paste the job description (optional):", height=150
         )
@@ -193,7 +209,7 @@ class StreamlitInterface:
             st.session_state.interview_messages.append(
                 {
                     "role": "assistant",
-                    "content": "Let's begin your interview! Tell me about yourself"
+                    "content": "Let's begin your interview! Tell me about yourself",
                 }
             )
             st.rerun()
