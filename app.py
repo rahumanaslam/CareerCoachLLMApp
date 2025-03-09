@@ -174,7 +174,7 @@ class StreamlitInterface:
         Renders the Interview Preparation page.
 
         This page simulates a mock interview session for a specific position and question type.
-        It provides feedback on user responses and conducts a final assessment after 5-7 questions.
+        It provides feedback on user responses.
 
         Parameters:
             app (CareerCoachApp): An instance of the CareerCoachApp class containing the logic for interview preparation.
@@ -182,7 +182,7 @@ class StreamlitInterface:
         Features:
             - Inputs: Position, Question Type (Technical, Behavioral, Leadership, Problem Solving).
             - Interactive chat-based mock interview.
-            - Real-time feedback and final assessment.
+            - Real-time feedback.
         """
         logging.info("Interview Preparation page")
         st.header("Interview Coach")
