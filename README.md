@@ -1,14 +1,14 @@
-# Career Coach LLM App
+# Career Path AI
 
 ## Overview
 
-This **Career Coach LLM App* is designed to provide personalized career guidance using large language models. This project consists of several modules:
+This **Career Path AI* is designed to provide personalized career guidance using large language models. This project consists of several modules:
 
 - **app**: Contains the main application code
 - **career_coach_llm**: Included the core logic for the career coaching LLM.
 - **experiments**: Houses various experiments and research related to improving the LLM's performance.
 
-The Career Coach LLM App consists of many sections, each responsible for a specific aspect of the application. These sections include:
+The Career Path AI consists of many sections, each responsible for a specific aspect of the application. These sections include:
 
 - **Dashboard**: Allows users to input their profile details (e.g., industry, experience, current role, target role) and generates a weekly action plan tailored to their career goals.
 ![Dashboard-Visual](app_visuals/dashboard.png)
