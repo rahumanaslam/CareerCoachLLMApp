@@ -1,6 +1,8 @@
 import os
 import time
 import logging
+import sqlite3
+import hashlib
 import streamlit as st
 from docling.document_converter import DocumentConverter
 from career_coach import CareerCoachApp
@@ -14,6 +16,50 @@ logging.basicConfig(
     filename="career_coach_log.log",
 )
 
+
+def init_db():
+    conn = sqlite3.connect('career_coach.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users
+        (id INTEGER PRIMARY KEY,
+        username TEXT UNIQUE,
+        password TEXT,
+        email TEXT UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+    ''')
+    conn.commit()
+    conn.close()
+    
+def hash_password(password):
+    return hashlib.sha256(
+        password.encode()
+    ).hexdigest()
+    
+def authenticate(username, password):
+    conn = sqlite3.connect('career_coach.db')
+    c = conn.cursor()
+    c.execute(
+    "SELECT * FROM users WHERE username=? AND password=?",
+    (username, hash_password(password))
+)
+    user = c.fetchone()
+    conn.close()
+    return user is not None
+
+def create_user(username, password, email):
+    try:
+        conn = sqlite3.connect('career_coach.db')
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
+            (username, hash_password(password), email)
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except sqlite3.IntegrityError:
+        return False
 
 class StreamlitInterface:
     """
@@ -347,26 +393,68 @@ class StreamlitInterface:
                 {"role": "assistant", "content": response_text}
             )
 
+def show_login_page():
+    st.title("AI Career Development Coach 💼")
+    st.caption("Your personal AI-powered career development suite")
+    tab1, tab2 = st.tabs(["login", "signup"])
 
-def main():
-    """
-    The entry point of the AI Career Development Coach application.
+    with tab1:
+        st.subheader("Login")
+        username = st.text_input(
+            "Username", key="login_username"
+        )
+        password = st.text_input(
+            "Password", type="password", key="login_password"
+        )
+        if st.button("Login"):
+            if authenticate(username, password):
+                st.session_state.authenticated = True
+                st.session_state.username = username
+                st.rerun()
+            else:
+                st.error("Invalid username or password")
+    
+    with tab2:
+        st.subheader("Create an Account")
+        new_username = st.text_input(
+            "username", key="signup_username"
+        )
+        new_email = st.text_input(
+            "email", key="signup_email"
+        )
+        new_password = st.text_input(
+            "password",
+            type="password",
+            key="signup_password"
+        )
+        confirm_password = st.text_input(
+            "password",
+            type="password",
+            key="confirm_password"
+        )
+        if st.button("Sign up"):
+            if new_password != confirm_password:
+                st.error("Passwords do not match")
+            elif not new_username or not new_password or not new_email:
+                st.error("All fields are required for signup")
+            else:
+                if create_user(new_username,
+                               new_password,
+                               new_email):
+                    st.success("Account Created successfully! Please login.")
+                else:
+                    st.error("Username or email already exists")
 
-    This function initializes the Streamlit app, sets up the navigation sidebar,
-    and routes users to the selected service page. It also initializes the CareerCoachApp instance.
-
-    Features:
-        - Sets the page title and icon.
-        - Provides a sidebar for navigation between different services.
-        - Dynamically renders the selected page using the StreamlitInterface class.
-    """
+def show_app():
     logging.info("Starting AI Career Development Coach App")
     st.title("AI Career Development Coach 💼")
     st.caption("Your personal AI-powered career development suite")
-
+    if st.sidebar.button("Logout"):
+        st.session_state.authenticated = False
+        st.session_state.username = None
+        st.rerun()
+    st.sidebar.write(f"Logged in as: {st.session_state.username}")
     app = CareerCoachApp()
-
-    # Main Navigation
     page = st.sidebar.selectbox(
         "Select Service",
         [
@@ -379,27 +467,31 @@ def main():
             "Ask Career Coach",
         ],
     )
-
     if page == "Dashboard":
         StreamlitInterface.dashboard(app)
-
     elif page == "Resume Analysis":
         StreamlitInterface.resume_analysis(app)
-
     elif page == "Job Market Research":
         StreamlitInterface.job_market_research(app)
-
     elif page == "Skills Development":
         StreamlitInterface.skills_development(app)
-
     elif page == "Interview Preparation":
         StreamlitInterface.interview_preparation(app)
-
     elif page == "Networking Strategy":
         StreamlitInterface.networking_strategy(app)
-
     elif page == "Ask Career Coach":
         StreamlitInterface.ask_career_coach(app)
+
+def main():
+    init_db()
+    if 'authenticated' not in st.session_state:
+        st.session_state.authenticated = False
+    if 'username' not in st.session_state:
+        st.session_state.username = None
+    if not st.session_state.authenticated:
+        show_login_page()
+    else:
+        show_app()
 
 
 if __name__ == "__main__":
