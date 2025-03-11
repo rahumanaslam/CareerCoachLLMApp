@@ -1,10 +1,9 @@
 import os
 import time
 import logging
-import sqlite3
-import hashlib
 import streamlit as st
 from docling.document_converter import DocumentConverter
+from database import DatabaseUtils
 from career_coach import CareerCoachApp
 
 
@@ -16,50 +15,6 @@ logging.basicConfig(
     filename="career_coach_log.log",
 )
 
-
-def init_db():
-    conn = sqlite3.connect('career_coach.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users
-        (id INTEGER PRIMARY KEY,
-        username TEXT UNIQUE,
-        password TEXT,
-        email TEXT UNIQUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
-    ''')
-    conn.commit()
-    conn.close()
-    
-def hash_password(password):
-    return hashlib.sha256(
-        password.encode()
-    ).hexdigest()
-    
-def authenticate(username, password):
-    conn = sqlite3.connect('career_coach.db')
-    c = conn.cursor()
-    c.execute(
-    "SELECT * FROM users WHERE username=? AND password=?",
-    (username, hash_password(password))
-)
-    user = c.fetchone()
-    conn.close()
-    return user is not None
-
-def create_user(username, password, email):
-    try:
-        conn = sqlite3.connect('career_coach.db')
-        c = conn.cursor()
-        c.execute(
-            "INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
-            (username, hash_password(password), email)
-        )
-        conn.commit()
-        conn.close()
-        return True
-    except sqlite3.IntegrityError:
-        return False
 
 class StreamlitInterface:
     """
@@ -126,7 +81,7 @@ class StreamlitInterface:
         """
         logging.info("Resume Analysis page")
         st.header("Resume Analysis")
-        # resume_text = st.text_area("Paste your resume text here:", height=300)
+        resume_text = str()
         resume_file = st.file_uploader(
             "Upload your resume file here:", type=["pdf", "docx", "doc"]
         )
@@ -392,107 +347,173 @@ class StreamlitInterface:
             st.session_state.career_coach_messages.append(
                 {"role": "assistant", "content": response_text}
             )
-
-def show_login_page():
-    st.title("AI Career Development Coach 💼")
-    st.caption("Your personal AI-powered career development suite")
-    tab1, tab2 = st.tabs(["login", "signup"])
-
-    with tab1:
-        st.subheader("Login")
-        username = st.text_input(
-            "Username", key="login_username"
-        )
-        password = st.text_input(
-            "Password", type="password", key="login_password"
-        )
-        if st.button("Login"):
-            if authenticate(username, password):
-                st.session_state.authenticated = True
-                st.session_state.username = username
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
     
-    with tab2:
-        st.subheader("Create an Account")
-        new_username = st.text_input(
-            "username", key="signup_username"
-        )
-        new_email = st.text_input(
-            "email", key="signup_email"
-        )
-        new_password = st.text_input(
-            "password",
-            type="password",
-            key="signup_password"
-        )
-        confirm_password = st.text_input(
-            "password",
-            type="password",
-            key="confirm_password"
-        )
-        if st.button("Sign up"):
-            if new_password != confirm_password:
-                st.error("Passwords do not match")
-            elif not new_username or not new_password or not new_email:
-                st.error("All fields are required for signup")
-            else:
-                if create_user(new_username,
-                               new_password,
-                               new_email):
-                    st.success("Account Created successfully! Please login.")
-                else:
-                    st.error("Username or email already exists")
+    @staticmethod
+    def show_login_page(db_utils):
+        """
+        Renders the Login and Signup page for the AI Career Development Coach application.
 
-def show_app():
-    logging.info("Starting AI Career Development Coach App")
-    st.title("AI Career Development Coach 💼")
-    st.caption("Your personal AI-powered career development suite")
-    if st.sidebar.button("Logout"):
-        st.session_state.authenticated = False
-        st.session_state.username = None
-        st.rerun()
-    st.sidebar.write(f"Logged in as: {st.session_state.username}")
-    app = CareerCoachApp()
-    page = st.sidebar.selectbox(
-        "Select Service",
-        [
-            "Dashboard",
-            "Resume Analysis",
-            "Job Market Research",
-            "Skills Development",
-            "Interview Preparation",
-            "Networking Strategy",
-            "Ask Career Coach",
-        ],
-    )
-    if page == "Dashboard":
-        StreamlitInterface.dashboard(app)
-    elif page == "Resume Analysis":
-        StreamlitInterface.resume_analysis(app)
-    elif page == "Job Market Research":
-        StreamlitInterface.job_market_research(app)
-    elif page == "Skills Development":
-        StreamlitInterface.skills_development(app)
-    elif page == "Interview Preparation":
-        StreamlitInterface.interview_preparation(app)
-    elif page == "Networking Strategy":
-        StreamlitInterface.networking_strategy(app)
-    elif page == "Ask Career Coach":
-        StreamlitInterface.ask_career_coach(app)
+        This page provides a user authentication interface with two tabs: 
+        1. Login - Allows existing users to authenticate using their credentials.
+        2. Signup - Enables new users to create an account by providing required details.
+
+        Parameters:
+            db_utils (DBUtils): An instance of the DBUtils class responsible for database operations 
+                                such as user authentication and account creation.
+
+        Features:
+            - Displays a clean, tab-based interface for login and signup functionality.
+            - Validates user credentials during login and provides appropriate feedback.
+            - Ensures robust validation for signup, including password matching and required field checks.
+            - Handles account creation and notifies users of success or failure during signup.
+            - Redirects authenticated users to the main application and maintains session state.
+        """
+        st.title("AI Career Development Coach 💼")
+        st.caption("Your personal AI-powered career development suite")
+        tab1, tab2 = st.tabs(["login", "signup"])
+
+        with tab1:
+            st.subheader("Login")
+            username = st.text_input(
+                "Username", key="login_username"
+            )
+            password = st.text_input(
+                "Password", type="password", key="login_password"
+            )
+            if st.button("Login"):
+                if db_utils.authenticate(username, password):
+                    st.session_state.authenticated = True
+                    st.session_state.username = username
+                    st.rerun()
+                else:
+                    st.error("Invalid username or password")
+        
+        with tab2:
+            st.subheader("Create an Account")
+            new_username = st.text_input(
+                "username", key="signup_username"
+            )
+            new_email = st.text_input(
+                "email", key="signup_email"
+            )
+            new_password = st.text_input(
+                "password",
+                type="password",
+                key="signup_password"
+            )
+            confirm_password = st.text_input(
+                "password",
+                type="password",
+                key="confirm_password"
+            )
+            if st.button("Sign up"):
+                if new_password != confirm_password:
+                    st.error("Passwords do not match")
+                elif not new_username or not new_password or not new_email:
+                    st.error("All fields are required for signup")
+                else:
+                    if db_utils.create_user(new_username,
+                                new_password,
+                                new_email):
+                        st.success("Account Created successfully! Please login.")
+                    else:
+                        st.error("Username or email already exists")
+
+    @staticmethod
+    def show_app():
+        """
+        Renders the main application interface for the AI Career Development Coach.
+
+        This method serves as the entry point for the application, providing users with a personalized AI-powered career development suite. 
+        It includes a sidebar for navigation and logout functionality, along with a dropdown menu to select various services offered by the app.
+
+        Parameters:
+            None
+
+        Features:
+            - Displays the app title and caption, welcoming users to the career development suite.
+            - Provides a "Logout" button in the sidebar to allow users to log out and reset their session.
+            - Displays the logged-in user's username in the sidebar for easy identification.
+            - Offers a dropdown menu in the sidebar for users to navigate between different services:
+                1. Dashboard: Overview of career insights and progress.
+                2. Resume Analysis: Analyzes resumes and provides actionable feedback.
+                3. Job Market Research: Assists users in researching job market trends.
+                4. Skills Development: Guides users in identifying and developing key skills.
+                5. Interview Preparation: Prepares users for interviews with tailored advice.
+                6. Networking Strategy: Helps users build and optimize their professional network.
+                7. Ask Career Coach: Provides an interactive Q&A interface with the AI Career Coach.
+            - Dynamically renders the selected page using corresponding methods from the StreamlitInterface class.
+        """
+        logging.info("Starting AI Career Development Coach App")
+        st.title("AI Career Development Coach 💼")
+        st.caption("Your personal AI-powered career development suite")
+        if st.sidebar.button("Logout"):
+            st.session_state.authenticated = False
+            st.session_state.username = None
+            st.rerun()
+        st.sidebar.write(f"Logged in as: {st.session_state.username}")
+        app = CareerCoachApp()
+        page = st.sidebar.selectbox(
+            "Select Service",
+            [
+                "Dashboard",
+                "Resume Analysis",
+                "Job Market Research",
+                "Skills Development",
+                "Interview Preparation",
+                "Networking Strategy",
+                "Ask Career Coach",
+            ],
+        )
+        if page == "Dashboard":
+            StreamlitInterface.dashboard(app)
+        elif page == "Resume Analysis":
+            StreamlitInterface.resume_analysis(app)
+        elif page == "Job Market Research":
+            StreamlitInterface.job_market_research(app)
+        elif page == "Skills Development":
+            StreamlitInterface.skills_development(app)
+        elif page == "Interview Preparation":
+            StreamlitInterface.interview_preparation(app)
+        elif page == "Networking Strategy":
+            StreamlitInterface.networking_strategy(app)
+        elif page == "Ask Career Coach":
+            StreamlitInterface.ask_career_coach(app)
+
 
 def main():
-    init_db()
+    """
+    The main entry point for the AI Career Development Coach application.
+
+    This function initializes the application, manages user authentication state, and determines 
+    whether to display the login page or the main application interface. It ensures proper session 
+    state management for user authentication and username tracking.
+
+    Parameters:
+        None
+
+    Features:
+        - Initializes the DatabaseUtils instance to handle database operations.
+        - Manages session state variables:
+            - 'authenticated': Tracks whether the user is logged in.
+            - 'username': Stores the logged-in user's username.
+        - Displays the login page if the user is not authenticated.
+        - Displays the main application interface if the user is authenticated.
+        - Ensures seamless navigation between authentication and application views.
+    """
+    db_utils = DatabaseUtils()
     if 'authenticated' not in st.session_state:
         st.session_state.authenticated = False
     if 'username' not in st.session_state:
         st.session_state.username = None
     if not st.session_state.authenticated:
-        show_login_page()
+        StreamlitInterface.show_login_page(db_utils)
     else:
-        show_app()
+        StreamlitInterface.show_app()
 
 
 if __name__ == "__main__":
+    """
+    __main__ block for the AI Career Development Coach application.
+    """
     main()
