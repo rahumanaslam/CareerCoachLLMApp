@@ -6,7 +6,9 @@ This **Career Path AI* is designed to provide personalized career guidance using
 
 - **app**: Contains the main application code
 - **career_coach_llm**: Included the core logic for the career coaching LLM.
-- **experiments**: Houses various experiments and research related to improving the LLM's performance.
+- **db_utils**: Includes the database utilities for storing and retrieving user data.
+- **config**: Contains the prompts and configurations for the LLM.
+- **tools**: Contains the tools for the LLM (DuckDuckGoSearch).
 
 The Career Path AI consists of many sections, each responsible for a specific aspect of the application. These sections include:
 
@@ -22,7 +24,7 @@ The Career Path AI consists of many sections, each responsible for a specific as
 ![Interview-Preparation-Visual](app_visuals/interview_prep.gif)
 - **Networking Strategy**: Helps users generate a networking strategy based on their goals and preferred platform.
 ![Networking-Strategy-Visual](app_visuals/networking_strategy.png)
-- **Ask Career Coach**: Allows users to ask open-ended questions to the AI Career Coach. The app provides real-time responses in a chat-based interface.    
+- **Ask Career Coach**: Allows users to ask open-ended questions to the AI` Career Coach. The app provides real-time responses in a chat-based interface.    
 ![Ask-Career-Coach-Visual](app_visuals/ask_career_coach.gif)
 
 ## Table of Contents
