@@ -12,6 +12,8 @@ This **Career Path AI* is designed to provide personalized career guidance using
 
 The Career Path AI consists of many sections, each responsible for a specific aspect of the application. These sections include:
 
+- **LoginPage**: This module allows users to log in to the application using their email and password. Also, sign up functionality is provided.
+![Login-Page-Visual](app_visuals/login_page.png)
 - **Dashboard**: Allows users to input their profile details (e.g., industry, experience, current role, target role) and generates a weekly action plan tailored to their career goals.
 ![Dashboard-Visual](app_visuals/dashboard.png)
 - **Resume Analysis**: Allows users to paste their resume text and optionally a job description for analysis. The app evaluates the resume and provides feedback on how well it matches the job description.
