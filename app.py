@@ -513,7 +513,4 @@ def main():
 
 
 if __name__ == "__main__":
-    """
-    __main__ block for the AI Career Development Coach application.
-    """
     main()
