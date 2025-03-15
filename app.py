@@ -41,27 +41,30 @@ class StreamlitInterface:
         logging.info("Dashboard page")
         st.header("Career Development Dashboard")
 
-        with st.expander("Your Profile"):
-            industry = st.text_input(
-                "Industry", placeholder="e.g., Technology, Healthcare"
-            )
-            experience = st.slider("Years of Experience", 0, 30, 5)
-            current_role = st.text_input(
-                "Current Role", placeholder="e.g., Software Engineer"
-            )
-            target_role = st.text_input(
-                "Target Role", placeholder="e.g., Senior Software Engineer"
-            )
+        st.subheader("Your Profile")
+        industry = st.text_input(
+            "Industry", placeholder="e.g., Technology, Healthcare"
+        )
+        experience = st.slider("Years of Experience", 0, 30, 5)
+        current_role = st.text_input(
+            "Current Role", placeholder="e.g., Software Engineer"
+        )
+        target_role = st.text_input(
+            "Target Role", placeholder="e.g., Senior Software Engineer"
+        )
 
         st.subheader("Weekly Action Items")
         if st.button("Generate Action Plan"):
-            with st.spinner("Creating your action plan..."):
-                action_plan = app.skills_developer.run(
-                    f"Create a weekly action plan for a {current_role} targeting {target_role} role "
-                    f"in {industry} with {experience} years of experience. Format document as a clear markdown document with headers and subheaders",
-                    stream=False,
-                )
-                st.write(action_plan.content)
+            if not (industry and experience and current_role and target_role):
+                st.error("Please fill out all the fields before generating the action plan.")
+            else:
+                with st.spinner("Creating your action plan..."):
+                    action_plan = app.skills_developer.run(
+                        f"Create a weekly action plan for a {current_role} targeting {target_role} role "
+                        f"in {industry} with {experience} years of experience. Format document as a clear markdown document with headers and subheaders",
+                        stream=False,
+                    )
+                    st.write(action_plan.content)
 
     @staticmethod
     def resume_analysis(app):
@@ -101,17 +104,20 @@ class StreamlitInterface:
         )
 
         if st.button("Analyze Resume"):
-            with st.spinner("Analyzing your resume..."):
-                analysis = app.resume_analyzer.run(
-                    f"Analyze this resume:\n{resume_text}\n"
-                    + (
-                        f"Compare with job description:\n{job_description}"
-                        if job_description
-                        else ""
-                    ),
-                    stream=False,
-                )
-                st.write(analysis.content)
+            if not resume_text: 
+                st.error("Please paste your resume text before analyzing it.")
+            else:
+                with st.spinner("Analyzing your resume..."):
+                    analysis = app.resume_analyzer.run(
+                        f"Analyze this resume:\n{resume_text}\n"
+                        + (
+                            f"Compare with job description:\n{job_description}"
+                            if job_description
+                            else ""
+                        ),
+                        stream=False,
+                    )
+                    st.write(analysis.content)
 
     @staticmethod
     def job_market_research(app):
@@ -134,13 +140,16 @@ class StreamlitInterface:
         location = st.text_input("Location", placeholder="e.g., San Francisco")
 
         if st.button("Research Market"):
-            with st.spinner("Researching job market..."):
-                research = app.market_researcher.run(
-                    f"Research the job market for {role} in {location}. "
-                    "Include salary ranges, required skills, and market demand. Format document as a clear markdown document with headers and subheaders",
-                    stream=False,
-                )
-                st.write(research.content)
+            if not role or not location:
+                st.error("Please enter a job title and location to research the market.")
+            else:
+                with st.spinner("Researching job market..."):
+                    research = app.market_researcher.run(
+                        f"Research the job market for {role} in {location}. "
+                        "Include salary ranges, required skills, and market demand. Format document as a clear markdown document with headers and subheaders",
+                        stream=False,
+                    )
+                    st.write(research.content)
 
     @staticmethod
     def skills_development(app):
@@ -162,12 +171,15 @@ class StreamlitInterface:
         timeframe = st.slider("Learning timeframe (months)", 1, 12, 3)
 
         if st.button("Create Learning Plan"):
-            with st.spinner("Creating your learning plan..."):
-                plan = app.skills_developer.run(
-                    f"Create a {timeframe}-month learning plan for: {target_skills}. Format document as a clear markdown document with headers and subheaders",
-                    stream=False,
-                )
-                st.write(plan.content)
+            if not target_skills:
+                st.error("Please enter the skills you want to develop.")
+            else:
+                with st.spinner("Creating your learning plan..."):
+                    plan = app.skills_developer.run(
+                        f"Create a {timeframe}-month learning plan for: {target_skills}. Format document as a clear markdown document with headers and subheaders",
+                        stream=False,
+                    )
+                    st.write(plan.content)
 
     @staticmethod
     def interview_preparation(app):
@@ -206,14 +218,19 @@ class StreamlitInterface:
         )
 
         if st.button("Start Mock Interview") and not st.session_state.interview_ongoing:
-            st.session_state.interview_ongoing = True
-            st.session_state.interview_messages.append(
-                {
-                    "role": "assistant",
-                    "content": "Let's begin your interview! Tell me about yourself",
-                }
-            )
-            st.rerun()
+            if not position: 
+                st.error("Please enter a valid position.")
+            elif not question_type:
+                st.error("Please select a valid question type.")
+            else:
+                st.session_state.interview_ongoing = True
+                st.session_state.interview_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": "Let's begin your interview! Tell me about yourself",
+                    }
+                )
+                st.rerun()
 
         # Push content down
         st.write("---")
@@ -294,12 +311,15 @@ class StreamlitInterface:
         )
 
         if st.button("Generate Strategy"):
-            with st.spinner("Creating networking strategy..."):
-                strategy = app.networking_strategist.run(
-                    f"Create a networking strategy for {goal} focusing on {platform}. Format document as a clear markdown document with headers and subheaders",
-                    stream=False,
-                )
-                st.write(strategy.content)
+            if not goal or not platform:
+                st.error("Please enter a goal and platform to generate the strategy.")
+            else:
+                with st.spinner("Creating networking strategy..."):
+                    strategy = app.networking_strategist.run(
+                        f"Create a networking strategy for {goal} focusing on {platform}. Format document as a clear markdown document with headers and subheaders",
+                        stream=False,
+                    )
+                    st.write(strategy.content)
 
     @staticmethod
     def ask_career_coach(app):
